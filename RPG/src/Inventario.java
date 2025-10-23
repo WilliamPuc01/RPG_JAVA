@@ -1,2 +1,112 @@
-public class Inventario {
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Iterator;
+
+public class Inventario implements Cloneable {
+    private List<Item> itens;
+
+    public Inventario() {
+        this.itens = new ArrayList<>();
+    }
+
+    //Construtor de copia profunda(deep copy)
+    //vamos usar para os save points do personagem.
+    public Inventario(Inventario original) {
+        this.itens = new ArrayList<>();
+
+        for (Item itemOriginal : original.itens) {
+            this.itens.add(new Item(itemOriginal));
+        }
+    }
+
+    public void adicionarItem(Item itemParaAdicionar) {
+        //O metodo indexOf usa o Item.equals() que implementamos (checa por nome)
+        int indice = this.itens.indexOf(itemParaAdicionar);
+
+        //se for diferente de -1 quer dizer que achou.
+        if (indice != -1) {
+            Item itemExistente = this.itens.get(indice);
+            itemExistente.adicionarQuantidade(itemParaAdicionar.getQuantidade());
+            System.out.println("Adicionado " + itemParaAdicionar.getQuantidade() +
+                    " Ao estoque de " + itemParaAdicionar.getNome() +
+                    ". Total: " + itemExistente.getQuantidade());
+        } else {
+            this.itens.add(itemParaAdicionar);
+            System.out.println(itemParaAdicionar.getNome() + " Qtd: " +
+                    itemParaAdicionar.getQuantidade() + ") foi adicionado ao inventario");
+        }
+    }
+
+    public boolean usarItemPorNome(String nomeDoItem) {
+        // Usamos um Iterator para poder remover itens da lista
+        // de forma segura ENQUANTO iteramos por ela.
+        Iterator<Item> iterador = this.itens.iterator();
+
+        while (iterador.hasNext()) {
+            Item item = iterador.next();
+
+            if (item.getNome().equals(nomeDoItem)) {
+                item.usarItem();
+
+                if (item.getQuantidade() <= 0) {
+                    iterador.remove();
+                    System.out.println(item.getNome() + " acabou.");
+                }
+                return true;
+            }
+        }
+
+        System.out.println("Item: " + nomeDoItem + " nao encontrado no inventario.");
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        if (this.itens.isEmpty()) {
+            return "Inventario vazio.";
+        }
+
+        //Ordena a lista usando o Item.compareTo().
+        Collections.sort(this.itens);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("--- Inventario Ordenado ---\n");
+        for (Item item : this.itens) {
+            sb.append(item.toString()).append("\n");
+        }
+        sb.append("---------------------------\n");
+        return sb.toString();
+    }
+
+    @Override
+    public Inventario clone() {
+        try {
+            //Primeiro fazer uma copia rasa.
+            Inventario inventarioClonado = (Inventario) super.clone();
+
+            //Corrigir a copia rasa. Criando uma nova lista de itens.
+            inventarioClonado.itens = new ArrayList<>();
+
+            //Enche a nova lista com copias dos itens originais.
+            for (Item itemOriginal : this.itens) {
+                inventarioClonado.itens.add(new Item(itemOriginal));
+            }
+            return inventarioClonado;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError("Falha ao clonar inventario", e);
+        }
+    }
+
+    //Metodo auxiliar para pegar o item (para aplicar efeito)
+    public Item getItemPorNome(String nomeDoItem) {
+        for (Item item : this.itens) {
+            if (item.getNome().equals(nomeDoItem)) {
+                return item;
+            }
+        }
+        return null;
+    }
+
+
 }
