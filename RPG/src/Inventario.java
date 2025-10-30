@@ -108,5 +108,37 @@ public class Inventario implements Cloneable {
         return null;
     }
 
+    //Importante para o sistema de loot.
+    public List<Item> getItens() {
+        return this.itens;
+    }
+
+    public boolean estaVazio() {
+        return this.itens.isEmpty();
+    }
+
+    public boolean removerQuantidadePorNome (String nomeDoItem, int quantidadeParaRemover) {
+        Iterator<Item> iterador = this.itens.iterator();
+
+        while (iterador.hasNext()) {
+            Item item = iterador.next();
+
+            if (item.getNome().equals(nomeDoItem)) {
+                if (item.getQuantidade() >= quantidadeParaRemover) {
+                    item.setQuantidade(item.getQuantidade() - quantidadeParaRemover);
+                    System.out.println(quantidadeParaRemover + "x " + item.getNome() + " foram removidos do invetario.");
+
+                    if (item.getQuantidade() <= 0) {
+                        iterador.remove();
+                        System.out.println(item.getNome() + " acabou.");
+                    }
+                    return true;//Remocao bem sucedida.
+                } else {
+                    return false;//Nao tem quantidade suficiente.
+                }
+            }
+        }
+        return false;//Item nao encoontrado.
+    }
 
 }

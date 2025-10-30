@@ -7,6 +7,15 @@ public class Jogo {
     private Random dado;
     private boolean jogoRodando;
 
+    private int bonusAtaqueJogador;
+    private int bonusDefesaInimigo;
+    private String localAtual;
+
+    private Personagem jogadorSalvo;
+    private String localSalvo;
+
+    private boolean questRatoCompleta = false;
+
     public static void main(String[] args) {
         Jogo meuJogo = new Jogo();
 
@@ -30,7 +39,10 @@ public class Jogo {
         Item itemInicial = new Item("Fermento", "Um fermento de boa qualidade.","CURA", 2);
         this.jogador.getInventario().adicionarItem(itemInicial);
 
-        System.out.println("\n" + this.jogador.getNome() + "comeca sua jornada!");
+        this.localAtual = "Balcao";
+
+        System.out.println("\n" + this.jogador.getNome() +
+                " comeca sua jornada no " + localAtual + "!");
 
         loopPrincipal();
     }
@@ -73,70 +85,28 @@ public class Jogo {
 
     //Loop principal: Historia e navegacao.
     public void loopPrincipal() {
-        while (this.jogoRodando && this.jogador.isEstaVivo()) {
-            System.out.println("\n--- Menu Principal ---");
-            System.out.println("O que voce deseja fazer?");
-            System.out.println("1. Explorar a Cozinha (Navegacao)");
-            System.out.println("2. Ver Inventario e Usar Itens");
-            System.out.println("3. Ver Status do Personagem");
-            System.out.println("9. Sair do Jogo");
-            System.out.print("Sua escolha: ");
+        while (this.jogoRodando) {
+
+            exibirMenuLocal();
 
             String escolha = scanner.nextLine();
 
-            switch (escolha) {
-                case "1":
-                    explorar();
-                    break;
-                case "2":
-                    gerenciarInventario(false);
-                    break;
-                case "3":
-                    //Mostra o status do jogador
-                    System.out.println("\n--- Status Atual ---");
-                    System.out.println(this.jogador.toString());
-                    break;
-                case "9":
-                    System.out.println("\nObrigado por jogar! Ate a proxima.");
-                    this.jogoRodando = false;
-                    break;
-                default:
-                    System.out.println("\nOpcao invalida. Tente novamente.");
-                    break;
+            processarEscolha(escolha);
+
+            if (!this.jogador.isEstaVivo()) {
+                handleMorte();
             }
         }
 
-
-        if (!this.jogador.isEstaVivo()) {
-            System.out.println("\nGAME OVER.");
-        }
-    }
-
-    public void explorar() {
-        System.out.println("\nVoce explora os cantos empoeirados da cozinha...");
-
-        int rolagemEvento = this.dado.nextInt(20) + 1;
-
-        if (rolagemEvento <= 5) {
-            System.out.print("Voce nao encontra nade de interessante.");
-        } else if (rolagemEvento <= 15) {
-            System.out.println("Um inimigo aparece!");
-
-            Inimigo paoMofado = new Inimigo("Pao Mofado", 40, 8, 5, 1);
-
-            //Adicionando o drop do bicho.
-            paoMofado.getInventario().adicionarItem(new Item("Farinha Velha.", "Po branco.", "ITEM_QUEST", 1));
-
-            batalhar(paoMofado);
-        } else {
-            System.out.println("Voce encontrou um item no chao!");
-            Item itemAchado = new Item("Fermento", "Um fermento de boa qualidade.", "CURA", 1);
-            this.jogador.getInventario().adicionarItem(itemAchado);
-        }
+        System.out.println("\nGAME OVER. Obrigado por jogar.");
     }
 
     //METODO BATALHA!!!
     public void batalhar(Inimigo inimigo) {
+        //Reseta os buffs e debuffs dos personagens no inicio de cada batalha.
+        this.bonusAtaqueJogador = 0;
+        this.bonusDefesaInimigo = 0;
+
         System.out.println("\n--- BATALHA INICIADA ---");
         System.out.println(this.jogador.getNome() + " encontra um " + inimigo.getNome() + "!");
         System.out.println(this.jogador.toString());
@@ -195,7 +165,18 @@ public class Jogo {
             System.out.println("Saqueando os restos do inimigo...");
             Inventario loot = inimigo.getInventario().clone();
 
-            //Sistema de loot a ser implementado aqui.
+            if (!loot.estaVazio()) {
+                System.out.println("Voce encontrou os seguintes itens: ");
+
+                for (Item itemDoLoot : loot.getItens()) {
+                    System.out.println("- " + itemDoLoot.getNome() + " (Qtd: " + itemDoLoot.getQuantidade() + ")");
+
+                    this.jogador.getInventario().adicionarItem(itemDoLoot);
+                }
+            } else {
+                System.out.println("O inimgo nao tinha nada de valor.");
+            }
+
         } else if (!this.jogador.isEstaVivo()) {
             System.out.println("Derrota... Voce foi vencido pelo " + inimigo.getNome() + ".");
             this.jogoRodando = false;
@@ -208,6 +189,19 @@ public class Jogo {
 
         int danoBase = atacante.getAtaque();
         int defesaDefensor = defensor.getDefesa();
+
+        //Aplicar buff se o jogador estiver atacando.
+        if (atacante.equals(this.jogador)) {
+            danoBase += this.bonusAtaqueJogador;
+        }
+
+        //Aplica debuff no inimigo.
+        if (defensor instanceof Inimigo) {
+            defesaDefensor += this.bonusDefesaInimigo;
+            if (defesaDefensor < 0) {
+                defesaDefensor = 0;
+            }
+        }
 
         //Formula de dano:
         int danoTotal = (danoBase + rolagemDado) - defesaDefensor;
@@ -268,7 +262,6 @@ public class Jogo {
         //Aplicar efeito do item.
         switch (item.getEfeito().toUpperCase()) {
             case "CURA":
-                //definindo uma cura padrao por enquanto.
                 int cura = 25;
                 this.jogador.curar(cura);
                 System.out.println(this.jogador.getNome() + " usou " + item.getNome() + " e curou " +
@@ -277,13 +270,310 @@ public class Jogo {
                 this.jogador.getInventario().usarItemPorNome(item.getNome());
                 break;
 
-            case "ATAQUE_UP":
-                //aqui vai para um item que aumenta o ataque (ainda nao feito).
+            case "CURA_GRANDE":
+                int curaGrande = 50;
+                this.jogador.curar(curaGrande);
+                System.out.println(this.jogador.getNome() + " usou " + item.getNome() + " e curou " +
+                        curaGrande + "de HP.");
+                this.jogador.getInventario().usarItemPorNome(item.getNome());
                 break;
+
+            case "ATAQUE_UP":
+                if (!emBatalha) {
+                    System.out.println("Esse item so pode ser usado em batalha.");
+                    return;
+                }
+                int bonusAtk = 10;
+                this.bonusAtaqueJogador += bonusAtk;
+                System.out.println(this.jogador.getNome() + " usou " + item.getNome() + "! Seu ataque aumentou em " +
+                        bonusAtk + " nesta batalha.");
+                this.jogador.getInventario().usarItemPorNome(item.getNome());
+                break;
+
+            case "DEBUFF_DEFESA" :
+                if (!emBatalha) {
+                    System.out.println("Esse item so pode ser usado em batalha.");
+                    return;
+                }
+                int debuffDef = -5;
+                this.bonusDefesaInimigo += debuffDef;
+                System.out.println(this.jogador.getNome() + " usou " +
+                        item.getNome() + "! A defesa do inimigo foi reduzida em 5.");
+                this.jogador.getInventario().usarItemPorNome(item.getNome());
+                break;
+
+            case ("ITEM_QUEST") :
+                System.out.println("Esse item parece ser importante para uma missao e nao pode ser usado agora.");
+                break;
+
 
             default:
                 System.out.println("Este item nao tem efeito aparente.");
                 break;
         }
     }
+
+    private void exibirMenuLocal() {
+        System.out.println("\n==================================");
+        System.out.println("Você esta em: " + this.localAtual);
+        System.out.println("==================================");
+
+        switch (this.localAtual) {
+            case "Balcao":
+                System.out.println("Voce esta no balcao principal. O ar cheira a acucar.");
+                System.out.println("1. Ir para a 'Despensa' (Escura e empoeirada)");
+                System.out.println("2. Ir para perto do 'Forno' (Quente e barulhento)");
+                System.out.println("3. Falar com o 'Rato Padeiro'");
+
+                if (this.questRatoCompleta) {
+                    System.out.println("4. Ir para a 'Sala  do Trono de Acucar' (Revelada pelo Rato)");
+                }
+                break;
+
+            case "Despensa":
+                System.out.println("Voce esta na despensa. Sacos de farinha por toda parte.");
+                System.out.println("1. Voltar para o 'Balcao'");
+                System.out.println("2. Vasculhar um saco de farinha suspeito");
+                break;
+
+            case "Forno":
+                System.out.println("Voce esta perto do Forno. O calor e intenso.");
+                System.out.println("1. Voltar para o 'Balcao'");
+                break;
+
+            case "Sala do Trono de acucar":
+                System.out.println("Uma montanha de acucar cristalizado se ergue no centro.");
+                System.out.println("1. Voltar para o 'Balcao' (Recuar)");
+                System.out.println("2. Confrontar o 'Lorde Diabetes'");
+                break;
+        }
+
+        System.out.println("--- Acoes Comuns ---");
+        System.out.println("i. Ver Inventario e Usar Itens");
+        System.out.println("s. Ver Status do Personagem");
+        System.out.println("d. Descansar e Salvar Jogo");
+        System.out.println("q. Sair do Jogo");
+        System.out.print("Sua escolha: ");
+    }
+
+    private void processarEscolha(String escolha) {
+        //Essas escolhas sao acoes comuns e funcionam em qualquer local.
+        switch (escolha.toLowerCase()) {
+            case"i":
+                gerenciarInventario(false);
+                return;
+
+            case"s":
+                System.out.println("\n--- Status Atual ---");
+                System.out.println(this.jogador.toString());
+                return;
+
+            case"d":
+                if (this.jogador instanceof Bolo) {
+                    this.jogadorSalvo = new Bolo((Bolo) this.jogador);
+                } else if (this.jogador instanceof Croissant) {
+                    this.jogadorSalvo = new Croissant((Croissant) this.jogador);
+                } else if (this.jogador instanceof BombaDeChocolate) {
+                    this.jogadorSalvo = new BombaDeChocolate((BombaDeChocolate) this.jogador);
+                }
+                this.localSalvo = this.localAtual;
+
+                this.jogador.setPontosVida(this.jogador.pontosVidaMax);
+
+                System.out.println("Jogo salvo com sucesso! HP foi restaurado.");
+                System.out.println("(Save point: " + this.jogador.getNome() + " em " + this.localSalvo + ")");
+                return;
+
+            case"q":
+                System.out.println("\nObrigado por jogar! Ate a proxima.");
+                this.jogoRodando = false;
+                return;
+        }
+
+        //Acoes Específicas do Local
+        switch (this.localAtual) {
+            case "Balcao":
+                switch (escolha) {
+                    case "1":
+                        System.out.println("\nVoce abre a porta rangente da despensa...");
+                        this.localAtual = "Despensa";
+
+                        // EVENTO DE NAVEGAÇÃO (Lógica do antigo 'explorar()')
+                        int rolagem = dado.nextInt(10);
+                        if (rolagem < 3) {
+                            System.out.println("Um Pao Mofado pula de uma prateleira!");
+                            Inimigo paoMofado = new Inimigo("Pao Mofado", 40, 8, 5, 1);
+                            paoMofado.getInventario().adicionarItem(new Item("Farinha Velha", "Po branco.", "ITEM_QUEST", 1));
+                            batalhar(paoMofado);
+                        } else if (rolagem < 5) {
+                            System.out.println("Uma Massa Crua gosmenta bloqueia seu caminho!");
+                            Inimigo massaCrua = new Inimigo("Massa Crua", 70, 5, 12, 2);
+                            massaCrua.getInventario().adicionarItem(new Item("Fermento", "Um fermento potente.", "CURA", 1));
+                            batalhar(massaCrua);
+                        }
+                        break;
+
+                    case "2":
+                        System.out.println("\nVoce se aproxima do calor do forno...");
+                        this.localAtual = "Forno";
+
+
+                        if (dado.nextInt(10) < 4) {
+                            System.out.println("Uma xicara de Cafe Queimado salta em voce!");
+                            Inimigo cafeQueimado = new Inimigo("Cafe Queimado", 35, 15, 3, 2);
+                            cafeQueimado.getInventario().adicionarItem(new Item("Cafe Expresso", "Ataque rapido!", "ATAQUE_UP", 1));
+                            batalhar(cafeQueimado);
+                        }
+                        break;
+
+                    case "3":
+                        falarComRatoPadeiro();
+                        break;
+
+                    case "4":
+                        if (this.questRatoCompleta) {
+                            System.out.println("\nVoce usa a informacao do Rato e encontra a passagem secreta...");
+                            this.localAtual = "Sala do Trono de Acucar";
+                        } else {
+                            System.out.println("Opcao invalida. Tente novamente.");
+                        }
+                        break;
+
+                    default:
+                        System.out.println("\nOpcao invalida. Tente novamente.");
+                }
+                break;
+
+            case "Despensa":
+                switch (escolha) {
+                    case "1":
+                        System.out.println("\nVocê volta para a luz do balcao.");
+                        this.localAtual = "Balcao";
+                        break;
+
+                    case "2":
+                        System.out.println("\nVoce mexe em um saco de farinha aberto...");
+                        System.out.println("Voce encontrou um 'Saco de Farinha'!");
+                        this.jogador.getInventario().adicionarItem(new Item("Saco de Farinha", "Jogue nos olhos!", "DEBUFF_DEFESA", 1));
+                        break;
+                    default:
+                        System.out.println("\nOpcao invalida. Tente novamente.");
+                }
+                break;
+
+            case "Forno":
+                switch (escolha) {
+                    case "1":
+                        System.out.println("\nVocê se afasta do calor.");
+                        this.localAtual = "Balcao";
+                        break;
+
+                    default:
+                        System.out.println("\nOpcao invalida. Tente novamente.");
+                }
+                break;
+
+            case "Sala do Trono de Acucar":
+                switch (escolha) {
+                    case "1":
+                        System.out.println("\nVoce recua para o balcao.");
+                        this.localAtual = "Balcao";
+                        break;
+                    case "2":
+                        System.out.println("\n'LORDE DIABETES': 'Entao voce chegou, Paozinho insolente!'");
+                        System.out.println("O Lorde se levanta de seu trono de acucar!");
+
+                        //Stats: HP Muito Alto, Atk Alto, Def Média
+                        Inimigo lordeDiabetes = new Inimigo("Lorde Diabetes", 300, 25, 15, 10);
+                        lordeDiabetes.getInventario().adicionarItem(new Item("Coroa de Acucar", "O trofeu da sua vitoria.", "TROFEU", 1));
+
+                        batalhar(lordeDiabetes);
+
+                        if (!lordeDiabetes.isEstaVivo()) {
+                            System.out.println("\nCom um ultimo suspiro acucarado, o Lorde cai!");
+                            System.out.println("Voce venceu! A Padaria esta salva da tirania doce!");
+                            this.jogoRodando = false;
+                        }
+                        break;
+                    default:
+                        System.out.println("\nOpcao invalida. Tente novamente.");
+                }
+                break;
+
+            default:
+                System.out.println("\nOpcao invalida. Tente novamente.");
+                break;
+
+        }
+
+    }
+
+    private void handleMorte() {
+        System.out.println("\nVOCE FOI DERROTADO...");
+
+        if (this.jogadorSalvo != null) {
+            System.out.println("...mas voce tem um save point!");
+            System.out.print("Deseja carregar seu ultimo save? (s/n): ");
+            String escolha = scanner.nextLine();
+
+            if (escolha.equalsIgnoreCase("s")) {
+                //Criamos uma NOVA COPIA do save, para que o save original
+                //nao seja modificado se o jogador morrer de novo.
+                if (this.jogadorSalvo instanceof Bolo) {
+                    this.jogador = new Bolo((Bolo) this.jogadorSalvo);
+                } else if (this.jogadorSalvo instanceof Croissant) {
+                    this.jogador = new Croissant((Croissant) this.jogadorSalvo);
+                } else if (this.jogadorSalvo instanceof BombaDeChocolate) {
+                    this.jogador = new BombaDeChocolate((BombaDeChocolate) this.jogadorSalvo);
+                }
+
+                this.localAtual = this.localSalvo;
+
+                System.out.println("\nJogo carregado! Voce esta de volta ao " + this.localAtual + ".");
+            } else {
+                this.jogoRodando = false;
+            }
+        } else {
+            this.jogoRodando = false;
+        }
+    }
+
+    private void falarComRatoPadeiro() {
+        System.out.println("\n--- Dialogo: Rato Padeiro ---");
+
+        if (this.questRatoCompleta) {
+            System.out.println("'Rato Padeiro': (Chiando) 'Obrigado pela ajuda, " + this.jogador.getNome() + "! Cuidado com o Lorde!'");
+            return;
+        }
+
+        //Verifica se o jogador tem os itens da quest
+        Item itemQuest = this.jogador.getInventario().getItemPorNome("Farinha Velha");
+
+        if (itemQuest != null && itemQuest.getQuantidade() >= 3) {
+            //O JOGADOR TEM OS ITENS
+            System.out.println("'Rato Padeiro': (Chiando) 'Você conseguiu! Minhas 3 Farinhas Velhas!'");
+            System.out.println("'Rato Padeiro': 'Muito obrigado! Tome isto como recompensa.'");
+
+            //Remove os itens da quest
+            this.jogador.getInventario().removerQuantidadePorNome("Farinha Velha", 3);
+
+            //Da a recompensa (Essencia de Baunilha - Cura Grande)
+            Item recompensa = new Item("Essência de Baunilha", "Cura 50 HP.", "CURA_GRANDE", 1);
+            this.jogador.getInventario().adicionarItem(recompensa);
+
+            System.out.println("'Rato Padeiro': 'Aquele tirano, o Lorde Diabetes, esta escondido!'");
+            System.out.println("'Rato Padeiro': 'Ele esta na Sala do Trono de Acucar, passando pelo balcao!'");
+
+            this.questRatoCompleta = true;// Marca a quest como completa
+
+        } else {
+            //O JOGADOR AINDA NAO TEM OS ITENS
+            System.out.println("'Rato Padeiro': (Chiando) 'Ola, valente! Estou tentando fazer um Pao Divino!'");
+            System.out.println("'Rato Padeiro': 'Mas os Paes Mofados roubaram minha Farinha Velha!'");
+            int qtdAtual = (itemQuest == null) ? 0 : itemQuest.getQuantidade();
+            System.out.println("'Rato Padeiro': 'Traga-me 3 sacos de Farinha Velha e eu o recompensarei!'");
+            System.out.println("(Voce tem " + qtdAtual + "/3 Farinha Velha)");
+        }
+    }
+
 }
