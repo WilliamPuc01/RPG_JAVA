@@ -11,6 +11,9 @@ public abstract class Personagem {
     protected Inventario inventario;
     protected boolean estaVivo;
 
+    protected int experienciaAtual;
+    protected int experienciaParaProximoNivel;
+
     //Construtor principal
     public Personagem(String nome, int pontosVida, int ataque, int defesa, int nivel) {
         this.nome = nome;
@@ -21,6 +24,9 @@ public abstract class Personagem {
         this.nivel = nivel;
         this.inventario = new Inventario();
         this.estaVivo = true;
+
+        this.experienciaAtual = 0;
+        this.experienciaParaProximoNivel = 100 * nivel;
     }
 
     public Personagem(Personagem original) {
@@ -33,6 +39,9 @@ public abstract class Personagem {
         //Criar um construtor de copia do inventario
         this.inventario = new Inventario(original.inventario);
         this.estaVivo = original.estaVivo;
+
+        this.experienciaAtual = original.experienciaAtual;
+        this.experienciaParaProximoNivel = original.experienciaParaProximoNivel;
     }
 
     public void receberDano(int danoRecebido) {
@@ -100,9 +109,9 @@ public abstract class Personagem {
     @Override
     public String toString() {
         String status = this.estaVivo ?"Vivo":"Derrotado";
-        return String.format("[%s (Nivel: %d)] - HP: %d/%d | Atk: %d | Def: %d | Status: %s",
+        return String.format("[%s (Nivel: %d)] - HP: %d/%d | Atk: %d | Def: %d | XP: %d/%d Status: %s",
                 this.nome, this.nivel, this.pontosVida, this.pontosVidaMax,
-                this.ataque, this.defesa, status);
+                this.ataque, this.defesa, this.experienciaAtual, this.experienciaParaProximoNivel, status);
     }
 
     @Override
@@ -116,6 +125,39 @@ public abstract class Personagem {
     @Override
     public int hashCode() {
         return Objects.hash(nome);
+    }
+
+    public void ganharExperiencia(int xpGanha) {
+        this.experienciaAtual += xpGanha;
+        System.out.println(this.nome + "ganhou " + xpGanha + " de XP!");
+
+        while(this.experienciaAtual >= this.experienciaAtual) {
+            subirDeNivel();
+        }
+
+        System.out.println("XP atual: " + this.experienciaAtual + "/" + this.experienciaParaProximoNivel);
+    }
+
+    private void subirDeNivel() {
+        System.out.println("----------------------------------------");
+        System.out.println(this.nome + " SUBIU PARA O NIVEL " + (this.nivel + 1) + "!");
+
+        //Subtrai a experiencia necessaria do total(guardando o troco do XP)
+        this.experienciaAtual -= this.experienciaParaProximoNivel;
+
+        this.nivel++;
+        this.pontosVidaMax += 15;
+        this.pontosVida = this.pontosVidaMax;
+        this.ataque += 3;
+        this.defesa += 2;
+
+        this.experienciaParaProximoNivel = 100 * this.nivel;
+
+        System.out.println("HP Max aumentado para: " + this.pontosVidaMax);
+        System.out.println("Ataque aumentado para: " + this.ataque);
+        System.out.println("Defesa aumentada para: " + this.defesa);
+        System.out.println("HP restaurado!");
+        System.out.println("----------------------------------------");
     }
 
 }

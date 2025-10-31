@@ -162,6 +162,9 @@ public class Jogo {
         if (this.jogador.isEstaVivo() && !inimigo.isEstaVivo()) {
             System.out.println("VITORIA! Voce derrotou o " + inimigo.getNome() + "!");
 
+            int xpGanha = inimigo.getNivel() * 25;
+            this.jogador.ganharExperiencia(xpGanha);
+
             System.out.println("Saqueando os restos do inimigo...");
             Inventario loot = inimigo.getInventario().clone();
 
@@ -320,7 +323,7 @@ public class Jogo {
 
         switch (this.localAtual) {
             case "Balcao":
-                System.out.println("Voce esta no balcao principal. O ar cheira a acucar.");
+                System.out.println("Voce esta no balcao principal. O ar cheira a acucar.\n");
                 System.out.println("1. Ir para a 'Despensa' (Escura e empoeirada)");
                 System.out.println("2. Ir para perto do 'Forno' (Quente e barulhento)");
                 System.out.println("3. Falar com o 'Rato Padeiro'");
@@ -331,18 +334,21 @@ public class Jogo {
                 break;
 
             case "Despensa":
-                System.out.println("Voce esta na despensa. Sacos de farinha por toda parte.");
+                System.out.println("Voce esta na despensa. Sacos de farinha por toda parte.\n");
                 System.out.println("1. Voltar para o 'Balcao'");
                 System.out.println("2. Vasculhar um saco de farinha suspeito");
+                System.out.println("3. Procurar 'Fermento' (Guardado por uma Massa Crua)");
+                System.out.println("4. Procurar 'Farinha Velha' (Guardado por um Pao Mofado)");
                 break;
 
             case "Forno":
-                System.out.println("Voce esta perto do Forno. O calor e intenso.");
+                System.out.println("Voce esta perto do Forno. O calor eh intenso.\n");
                 System.out.println("1. Voltar para o 'Balcao'");
+                System.out.println("2. Pegar 'Cafe Expresso' (Guardado por um Cafe Queimado)");
                 break;
 
             case "Sala do Trono de acucar":
-                System.out.println("Uma montanha de acucar cristalizado se ergue no centro.");
+                System.out.println("Uma montanha de acucar cristalizado se ergue no centro.\n");
                 System.out.println("1. Voltar para o 'Balcao' (Recuar)");
                 System.out.println("2. Confrontar o 'Lorde Diabetes'");
                 break;
@@ -390,40 +396,18 @@ public class Jogo {
                 return;
         }
 
-        //Acoes Específicas do Local
+        //Acoes Especificas do Local
         switch (this.localAtual) {
             case "Balcao":
                 switch (escolha) {
                     case "1":
                         System.out.println("\nVoce abre a porta rangente da despensa...");
                         this.localAtual = "Despensa";
-
-                        // EVENTO DE NAVEGAÇÃO (Lógica do antigo 'explorar()')
-                        int rolagem = dado.nextInt(10);
-                        if (rolagem < 3) {
-                            System.out.println("Um Pao Mofado pula de uma prateleira!");
-                            Inimigo paoMofado = new Inimigo("Pao Mofado", 40, 8, 5, 1);
-                            paoMofado.getInventario().adicionarItem(new Item("Farinha Velha", "Po branco.", "ITEM_QUEST", 1));
-                            batalhar(paoMofado);
-                        } else if (rolagem < 5) {
-                            System.out.println("Uma Massa Crua gosmenta bloqueia seu caminho!");
-                            Inimigo massaCrua = new Inimigo("Massa Crua", 70, 5, 12, 2);
-                            massaCrua.getInventario().adicionarItem(new Item("Fermento", "Um fermento potente.", "CURA", 1));
-                            batalhar(massaCrua);
-                        }
                         break;
 
                     case "2":
                         System.out.println("\nVoce se aproxima do calor do forno...");
                         this.localAtual = "Forno";
-
-
-                        if (dado.nextInt(10) < 4) {
-                            System.out.println("Uma xicara de Cafe Queimado salta em voce!");
-                            Inimigo cafeQueimado = new Inimigo("Cafe Queimado", 35, 15, 3, 2);
-                            cafeQueimado.getInventario().adicionarItem(new Item("Cafe Expresso", "Ataque rapido!", "ATAQUE_UP", 1));
-                            batalhar(cafeQueimado);
-                        }
                         break;
 
                     case "3":
@@ -451,11 +435,53 @@ public class Jogo {
                         this.localAtual = "Balcao";
                         break;
 
-                    case "2":
+                    case "2": //Vasculhar saco
                         System.out.println("\nVoce mexe em um saco de farinha aberto...");
-                        System.out.println("Voce encontrou um 'Saco de Farinha'!");
-                        this.jogador.getInventario().adicionarItem(new Item("Saco de Farinha", "Jogue nos olhos!", "DEBUFF_DEFESA", 1));
+                        System.out.println("O 'Saco de Farinha' esta ali, mas voce ve o 'clique' de uma armadilha de rato!");
+                        System.out.print("Tentar pegar o item mesmo assim? (Requer 10+ no D20) (s/n): ");
+
+                        String decisao = scanner.nextLine();
+
+                        if (decisao.equalsIgnoreCase("s")) {
+                            int rolagemArmadilha = this.dado.nextInt(20) + 1; //Rola D20
+
+                            System.out.println("Voce tenta pegar... (Rolagem D20: " + rolagemArmadilha + ")");
+
+                            if (rolagemArmadilha >= 10) {
+                                //SUCESSO
+                                System.out.println("Sucesso! Voce desvia da armadilha por um triz!");
+                                System.out.println("Voce encontrou um 'Saco de Farinha'!");
+                                this.jogador.getInventario().adicionarItem(new Item("Saco de Farinha", "Jogue nos olhos!", "DEBUFF_DEFESA", 1));
+                            } else {
+                                //FALHA
+                                int danoArmadilha = 5;
+                                System.out.println("SNAP! A armadilha acerta sua mao!");
+                                System.out.println("Voce nao pegou o item e sofreu " + danoArmadilha + " de dano.");
+                                this.jogador.receberDano(danoArmadilha); //Jogador toma dano
+                            }
+
+                        } else {
+                            //Desistiu
+                            System.out.println("\nVoce decide que nao vale o risco e deixa o saco quieto.");
+                        }
                         break;
+
+                    case "3": //Luta pela CURA (Massa Crua)
+                        System.out.println("\nVoce ve um 'Fermento' brilhando, mas uma Massa Crua gosmenta o protege!");
+                        System.out.println("A Massa Crua ataca!");
+                        Inimigo massaCrua = new Inimigo("Massa Crua", 70, 5, 12, 2);
+                        massaCrua.getInventario().adicionarItem(new Item("Fermento", "Um fermento potente.", "CURA", 1));
+                        batalhar(massaCrua);
+                        break;
+
+                    case "4": //Luta pelo ITEM DA QUEST (Pao Mofado)
+                        System.out.println("\nUm Pao Mofado esta sentado em cima do saco de 'Farinha Velha'!");
+                        System.out.println("O Pao Mofado ataca!");
+                        Inimigo paoMofado = new Inimigo("Pao Mofado", 40, 8, 5, 1);
+                        paoMofado.getInventario().adicionarItem(new Item("Farinha Velha", "Po branco.", "ITEM_QUEST", 1));
+                        batalhar(paoMofado);
+                        break;
+
                     default:
                         System.out.println("\nOpcao invalida. Tente novamente.");
                 }
@@ -466,6 +492,14 @@ public class Jogo {
                     case "1":
                         System.out.println("\nVocê se afasta do calor.");
                         this.localAtual = "Balcao";
+                        break;
+
+                    case "2": //Luta pelo BUFF (Cafe Queimado)
+                        System.out.println("\nUma xicara de 'Cafe Expresso' esta fumegando. Mas eh uma armadilha!");
+                        System.out.println("Um Cafe Queimado salta em voce!");
+                        Inimigo cafeQueimado = new Inimigo("Cafe Queimado", 35, 15, 3, 2);
+                        cafeQueimado.getInventario().adicionarItem(new Item("Cafe Expresso", "Ataque rapido!", "ATAQUE_UP", 1));
+                        batalhar(cafeQueimado);
                         break;
 
                     default:
