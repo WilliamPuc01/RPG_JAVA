@@ -1,7 +1,6 @@
 import java.util.Objects;
 
 public abstract class Personagem {
-
     protected String nome;
     protected int pontosVida;
     protected int pontosVidaMax;
@@ -10,7 +9,6 @@ public abstract class Personagem {
     protected int nivel;
     protected Inventario inventario;
     protected boolean estaVivo;
-
     protected int experienciaAtual;
     protected int experienciaParaProximoNivel;
 
@@ -67,12 +65,41 @@ public abstract class Personagem {
         System.out.println(this.nome + " foi curado em " + pontosDeCura + " pontos.");
     }
 
-    public String getNome() {
-        return nome;
+    public void ganharExperiencia(int xpGanha) {
+        this.experienciaAtual += xpGanha;
+        System.out.println(this.nome + "ganhou " + xpGanha + " de XP!");
+
+        while(this.experienciaAtual >= this.experienciaAtual) {
+            subirDeNivel();
+        }
+
+        System.out.println("XP atual: " + this.experienciaAtual + "/" + this.experienciaParaProximoNivel);
     }
 
-    public int getPontosVida() {
-        return pontosVida;
+    private void subirDeNivel() {
+        System.out.println("----------------------------------------");
+        System.out.println(this.nome + " SUBIU PARA O NIVEL " + (this.nivel + 1) + "!");
+
+        //Subtrai a experiencia necessaria do total(guardando o troco do XP)
+        this.experienciaAtual -= this.experienciaParaProximoNivel;
+
+        this.nivel++;
+        this.pontosVidaMax += 15;
+        this.pontosVida = this.pontosVidaMax;
+        this.ataque += 3;
+        this.defesa += 2;
+
+        this.experienciaParaProximoNivel = 100 * this.nivel;
+
+        System.out.println("HP Max aumentado para: " + this.pontosVidaMax);
+        System.out.println("Ataque aumentado para: " + this.ataque);
+        System.out.println("Defesa aumentada para: " + this.defesa);
+        System.out.println("HP restaurado!");
+        System.out.println("----------------------------------------");
+    }
+
+    public String getNome() {
+        return nome;
     }
 
     public int getAtaque() {
@@ -126,41 +153,4 @@ public abstract class Personagem {
     public int hashCode() {
         return Objects.hash(nome);
     }
-
-    public void ganharExperiencia(int xpGanha) {
-        this.experienciaAtual += xpGanha;
-        System.out.println(this.nome + "ganhou " + xpGanha + " de XP!");
-
-        while(this.experienciaAtual >= this.experienciaAtual) {
-            subirDeNivel();
-        }
-
-        System.out.println("XP atual: " + this.experienciaAtual + "/" + this.experienciaParaProximoNivel);
-    }
-
-    private void subirDeNivel() {
-        System.out.println("----------------------------------------");
-        System.out.println(this.nome + " SUBIU PARA O NIVEL " + (this.nivel + 1) + "!");
-
-        //Subtrai a experiencia necessaria do total(guardando o troco do XP)
-        this.experienciaAtual -= this.experienciaParaProximoNivel;
-
-        this.nivel++;
-        this.pontosVidaMax += 15;
-        this.pontosVida = this.pontosVidaMax;
-        this.ataque += 3;
-        this.defesa += 2;
-
-        this.experienciaParaProximoNivel = 100 * this.nivel;
-
-        System.out.println("HP Max aumentado para: " + this.pontosVidaMax);
-        System.out.println("Ataque aumentado para: " + this.ataque);
-        System.out.println("Defesa aumentada para: " + this.defesa);
-        System.out.println("HP restaurado!");
-        System.out.println("----------------------------------------");
-    }
-
 }
-
-
-

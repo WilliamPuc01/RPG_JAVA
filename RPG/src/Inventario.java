@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Iterator;
 
 public class Inventario implements Cloneable {
+    //Esse "<>" sao os Generics, eles sao uma forma de garantir que essa List so
+    //aceite o tipo de objeto que voce quer
     private List<Item> itens;
 
     public Inventario() {
@@ -21,10 +23,10 @@ public class Inventario implements Cloneable {
     }
 
     public void adicionarItem(Item itemParaAdicionar) {
-        //O metodo indexOf usa o Item.equals() que implementamos (checa por nome)
+        //O metodo indexOf usa o Item.equals() que implementamos(ele checa por nome)
         int indice = this.itens.indexOf(itemParaAdicionar);
 
-        //se for diferente de -1 quer dizer que achou.
+        //se for diferente de -1 quer dizer que achou. Ja que o indice comeca no 0
         if (indice != -1) {
             Item itemExistente = this.itens.get(indice);
             itemExistente.adicionarQuantidade(itemParaAdicionar.getQuantidade());
@@ -39,17 +41,21 @@ public class Inventario implements Cloneable {
     }
 
     public boolean usarItemPorNome(String nomeDoItem) {
-        // Usamos um Iterator para poder remover itens da lista
-        // de forma segura ENQUANTO iteramos por ela.
+        //Usamos um Iterator para poder remover itens da lista
+        //de forma segura ENQUANTO iteramos por ela
+        //(ele sabe como se remover da lista sem quebrar o jogo)
         Iterator<Item> iterador = this.itens.iterator();
 
+        //hasNext() eh o metodo que o loop while usa para perguntar a ele: "Ja acabamos?" kkkkk
         while (iterador.hasNext()) {
+            //iterador.next(): Pega o item atual e passa para o proximo
             Item item = iterador.next();
 
             if (item.getNome().equals(nomeDoItem)) {
                 item.usarItem();
 
                 if (item.getQuantidade() <= 0) {
+                    //Remove da lista o ultimo item que next() te deu
                     iterador.remove();
                     System.out.println(item.getNome() + " acabou.");
                 }
@@ -59,6 +65,30 @@ public class Inventario implements Cloneable {
 
         System.out.println("Item: " + nomeDoItem + " nao encontrado no inventario.");
         return false;
+    }
+
+    public boolean removerQuantidadePorNome (String nomeDoItem, int quantidadeParaRemover) {
+        Iterator<Item> iterador = this.itens.iterator();
+
+        while (iterador.hasNext()) {
+            Item item = iterador.next();
+
+            if (item.getNome().equals(nomeDoItem)) {
+                if (item.getQuantidade() >= quantidadeParaRemover) {
+                    item.setQuantidade(item.getQuantidade() - quantidadeParaRemover);
+                    System.out.println(quantidadeParaRemover + "x " + item.getNome() + " foram removidos do invetario.");
+
+                    if (item.getQuantidade() <= 0) {
+                        iterador.remove();
+                        System.out.println(item.getNome() + " acabou.");
+                    }
+                    return true;//Remocao bem sucedida.
+                } else {
+                    return false;//Nao tem quantidade suficiente.
+                }
+            }
+        }
+        return false;//Item nao encontrado.
     }
 
     @Override
@@ -116,29 +146,4 @@ public class Inventario implements Cloneable {
     public boolean estaVazio() {
         return this.itens.isEmpty();
     }
-
-    public boolean removerQuantidadePorNome (String nomeDoItem, int quantidadeParaRemover) {
-        Iterator<Item> iterador = this.itens.iterator();
-
-        while (iterador.hasNext()) {
-            Item item = iterador.next();
-
-            if (item.getNome().equals(nomeDoItem)) {
-                if (item.getQuantidade() >= quantidadeParaRemover) {
-                    item.setQuantidade(item.getQuantidade() - quantidadeParaRemover);
-                    System.out.println(quantidadeParaRemover + "x " + item.getNome() + " foram removidos do invetario.");
-
-                    if (item.getQuantidade() <= 0) {
-                        iterador.remove();
-                        System.out.println(item.getNome() + " acabou.");
-                    }
-                    return true;//Remocao bem sucedida.
-                } else {
-                    return false;//Nao tem quantidade suficiente.
-                }
-            }
-        }
-        return false;//Item nao encoontrado.
-    }
-
 }

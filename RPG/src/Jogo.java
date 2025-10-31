@@ -6,25 +6,16 @@ public class Jogo {
     private Scanner scanner;
     private Random dado;
     private boolean jogoRodando;
-
     private int bonusAtaqueJogador;
     private int bonusDefesaInimigo;
     private String localAtual;
-
     private Personagem jogadorSalvo;
     private String localSalvo;
-
     private boolean questRatoCompleta = false;
 
-    public static void main(String[] args) {
-        Jogo meuJogo = new Jogo();
-
-        meuJogo.iniciar();
-    }
 
     public Jogo() {
         this.scanner = new Scanner(System.in);
-
         this.dado = new Random();
         this.jogoRodando = true;
     }
@@ -33,24 +24,18 @@ public class Jogo {
         System.out.println("=========================================");
         System.out.println("   Bem-vindo a BATALHA DA PADARIA RPG!");
         System.out.println("=========================================");
-
         criarPersonagem();
-
         Item itemInicial = new Item("Fermento", "Um fermento de boa qualidade.","CURA", 2);
         this.jogador.getInventario().adicionarItem(itemInicial);
-
         this.localAtual = "Balcao";
-
         System.out.println("\n" + this.jogador.getNome() +
                 " comeca sua jornada no " + localAtual + "!");
-
         loopPrincipal();
     }
 
     public void criarPersonagem() {
         System.out.println("Digite o nome do seu Heroi da Padaria: ");
         String nome = scanner.nextLine();
-
         System.out.println("Escolha sua classe:");
         System.out.println("1. Bolo (Guerreiro) - (HP: 120, Atk: 10, Def: 15)");
         System.out.println("2. Croissant (Arqueiro) - (HP: 90, Atk: 18, Def: 10)");
@@ -83,21 +68,16 @@ public class Jogo {
         System.out.println(this.jogador.toString());
     }
 
-    //Loop principal: Historia e navegacao.
+    //Loop principal:
     public void loopPrincipal() {
         while (this.jogoRodando) {
-
             exibirMenuLocal();
-
             String escolha = scanner.nextLine();
-
             processarEscolha(escolha);
-
             if (!this.jogador.isEstaVivo()) {
                 handleMorte();
             }
         }
-
         System.out.println("\nGAME OVER. Obrigado por jogar.");
     }
 
@@ -129,11 +109,11 @@ public class Jogo {
                     realizarAtaque(this.jogador, inimigo);
                     break;
                 case "2":
-                    //Passamos 'true' para indicar que estamos em batalha
+                    //Passamos true para indicar que estamos em batalha
                     gerenciarInventario(true);
                     break;
                 case "3":
-                    //Jogador escolheu fugir (Requisito 5)
+                    //Jogador escolheu fugir
                     jogadorFugiu = tentarFugir();
                     break;
                 default:
@@ -145,20 +125,20 @@ public class Jogo {
                 break;
             }
 
-            //Turno do inimigo.
+            //Turno do inimigo
             if (inimigo.isEstaVivo()) {
                 System.out.println("\nTurno do " + inimigo.getNome() + "...");
                 realizarAtaque(inimigo, this.jogador);
             }
 
-            //Status do fim da batalha.
+            //Status do fim da batalha
             System.out.println("\n--- Fim da Rodada ---");
             System.out.println(this.jogador.toString());
             System.out.println(inimigo.toString());
             System.out.println("---------------------\n");
         }
 
-        //Fim da batalha.
+        //Fim da batalha
         if (this.jogador.isEstaVivo() && !inimigo.isEstaVivo()) {
             System.out.println("VITORIA! Voce derrotou o " + inimigo.getNome() + "!");
 
@@ -186,19 +166,19 @@ public class Jogo {
         }
     }
 
-    //Metodo para calcular o ataque.
+    //Metodo para calcular o ataque
     private void realizarAtaque(Personagem atacante, Personagem defensor) {
         int rolagemDado = this.dado.nextInt(20) + 1;
 
         int danoBase = atacante.getAtaque();
         int defesaDefensor = defensor.getDefesa();
 
-        //Aplicar buff se o jogador estiver atacando.
+        //Aplicar buff se o jogador estiver atacando
         if (atacante.equals(this.jogador)) {
             danoBase += this.bonusAtaqueJogador;
         }
 
-        //Aplica debuff no inimigo.
+        //Aplica debuff no inimigo
         if (defensor instanceof Inimigo) {
             defesaDefensor += this.bonusDefesaInimigo;
             if (defesaDefensor < 0) {
@@ -209,7 +189,7 @@ public class Jogo {
         //Formula de dano:
         int danoTotal = (danoBase + rolagemDado) - defesaDefensor;
 
-        //Dano tem que ser no minimo 1, caso a defesa for mto alta.
+        //Dano tem que ser no minimo 1, caso a defesa for mto alta
         if (danoTotal <= 0) {
             danoTotal = 1;
             System.out.println(atacante.getNome() + " rolou " + rolagemDado +
@@ -236,7 +216,7 @@ public class Jogo {
         }
     }
 
-    //Usar itens do inventario.
+    //Usar itens do inventario
     public void gerenciarInventario(boolean emBatalha) {
         System.out.println("\n--- Meu Inventario ---");
 
@@ -262,7 +242,7 @@ public class Jogo {
             return;
         }
 
-        //Aplicar efeito do item.
+        //Aplicar efeito do item
         switch (item.getEfeito().toUpperCase()) {
             case "CURA":
                 int cura = 25;
@@ -363,7 +343,7 @@ public class Jogo {
     }
 
     private void processarEscolha(String escolha) {
-        //Essas escolhas sao acoes comuns e funcionam em qualquer local.
+        //Essas escolhas sao acoes comuns e funcionam em qualquer local
         switch (escolha.toLowerCase()) {
             case"i":
                 gerenciarInventario(false);
@@ -435,7 +415,7 @@ public class Jogo {
                         this.localAtual = "Balcao";
                         break;
 
-                    case "2": //Vasculhar saco
+                    case "2": //Vasculhar o saco
                         System.out.println("\nVoce mexe em um saco de farinha aberto...");
                         System.out.println("O 'Saco de Farinha' esta ali, mas voce ve o 'clique' de uma armadilha de rato!");
                         System.out.print("Tentar pegar o item mesmo assim? (Requer 10+ no D20) (s/n): ");
@@ -584,7 +564,7 @@ public class Jogo {
         Item itemQuest = this.jogador.getInventario().getItemPorNome("Farinha Velha");
 
         if (itemQuest != null && itemQuest.getQuantidade() >= 3) {
-            //O JOGADOR TEM OS ITENS
+            //O jogador tem os itens!!
             System.out.println("'Rato Padeiro': (Chiando) 'Você conseguiu! Minhas 3 Farinhas Velhas!'");
             System.out.println("'Rato Padeiro': 'Muito obrigado! Tome isto como recompensa.'");
 
@@ -598,10 +578,10 @@ public class Jogo {
             System.out.println("'Rato Padeiro': 'Aquele tirano, o Lorde Diabetes, esta escondido!'");
             System.out.println("'Rato Padeiro': 'Ele esta na Sala do Trono de Acucar, passando pelo balcao!'");
 
-            this.questRatoCompleta = true;// Marca a quest como completa
+            this.questRatoCompleta = true;//Marca a quest como completa
 
         } else {
-            //O JOGADOR AINDA NAO TEM OS ITENS
+            //O jogador ainda nao tem os itens
             System.out.println("'Rato Padeiro': (Chiando) 'Ola, valente! Estou tentando fazer um Pao Divino!'");
             System.out.println("'Rato Padeiro': 'Mas os Paes Mofados roubaram minha Farinha Velha!'");
             int qtdAtual = (itemQuest == null) ? 0 : itemQuest.getQuantidade();
@@ -609,5 +589,4 @@ public class Jogo {
             System.out.println("(Voce tem " + qtdAtual + "/3 Farinha Velha)");
         }
     }
-
 }
