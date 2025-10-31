@@ -1,0 +1,44 @@
+Relatório de Contribuição — RPG “Batalha da Padaria”
+
+Este relatório detalha a divisão de tarefas entre os membros da equipe, Arthur e William.
+
+Arthur
+
+Focou na arquitetura de Orientação a Objetos (POO) e nos sistemas centrais do jogo, garantindo que os requisitos técnicos da especificação fossem implementados corretamente.
+
+Arquitetura POO (Item, Inventário):
+ Desenvolveu a classe Item, implementando equals, hashCode e compareTo para o gerenciamento correto de itens.
+ Arquitetou a classe Inventário, implementando a lógica de cópia profunda (Deep Copy) para o clone() (loot) e para o Construtor de Cópia (save point).
+ Implementou o Iterator para remoção segura de itens.
+
+Estrutura de Herança (Personagem):
+ Definiu a classe abstrata Personagem, que serve como base para todas as entidades do jogo (Heróis e Inimigos).
+
+Sistemas de Jogo (Jogo.java):
+ Implementou o sistema de batalhar() (combate em turnos) e realizarAtaque(), incluindo a lógica de buffs e debuffs.
+ Desenvolveu o sistema de Level Up (XP e subirDeNivel()).
+ Programou o sistema de Save Point (Salvar/Carregar) utilizando o construtor de cópia.
+
+William
+
+Focou na criação do conteúdo do jogo, na experiência do usuário e na implementação da história, tornando a arquitetura do jogo jogável e divertida.
+
+Criação de Entidades (Heróis e Inimigos):
+ Implementou as subclasses Bolo, Croissant, BombaDeChocolate e Inimigo, definindo seus atributos base (HP, Ataque, Defesa).
+
+Configuração Inicial e Interface (Jogo.java):
+ Implementou os menus iniciais (main, iniciar) e o sistema de criarPersonagem().
+
+Design da História e Navegação (Jogo.java):
+ Escreveu e implementou a navegação por locais (exibirMenuLocal()).
+ Implementou a lógica de “Escolha Tática” (processarEscolha()), definindo quais inimigos guardam quais itens.
+ Escreveu os diálogos e a lógica da quest do “Rato Padeiro” (falarComRatoPadeiro()).
+ Implementou os desafios (como o D20 da armadilha na Despensa).
+
+
+
+Alunos:
+
+Arthur Sebastian Guarniz de Castro RA: 24795528 NOTA: 9
+
+William Kenzo Nakao RA: 24005718 NOTA: 8

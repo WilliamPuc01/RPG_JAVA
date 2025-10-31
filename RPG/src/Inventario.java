@@ -30,13 +30,8 @@ public class Inventario implements Cloneable {
         if (indice != -1) {
             Item itemExistente = this.itens.get(indice);
             itemExistente.adicionarQuantidade(itemParaAdicionar.getQuantidade());
-            System.out.println("Adicionado " + itemParaAdicionar.getQuantidade() +
-                    " Ao estoque de " + itemParaAdicionar.getNome() +
-                    ". Total: " + itemExistente.getQuantidade());
         } else {
             this.itens.add(itemParaAdicionar);
-            System.out.println(itemParaAdicionar.getNome() + " Qtd: " +
-                    itemParaAdicionar.getQuantidade() + ") foi adicionado ao inventario");
         }
     }
 

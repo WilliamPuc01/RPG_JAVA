@@ -1,6 +1,11 @@
 import java.util.Objects;
 
 public abstract class Personagem {
+    private static final int XP_BASE_POR_NIVEL = 100;
+    private static final int BONUS_HP_LEVEL_UP = 15;
+    private static final int BONUS_ATAQUE_LEVEL_UP = 3;
+    private static final int BONUS_DEFESA_LEVEL_UP = 2;
+
     protected String nome;
     protected int pontosVida;
     protected int pontosVidaMax;
@@ -24,7 +29,7 @@ public abstract class Personagem {
         this.estaVivo = true;
 
         this.experienciaAtual = 0;
-        this.experienciaParaProximoNivel = 100 * nivel;
+        this.experienciaParaProximoNivel = XP_BASE_POR_NIVEL * nivel;
     }
 
     public Personagem(Personagem original) {
@@ -67,9 +72,9 @@ public abstract class Personagem {
 
     public void ganharExperiencia(int xpGanha) {
         this.experienciaAtual += xpGanha;
-        System.out.println(this.nome + "ganhou " + xpGanha + " de XP!");
+        System.out.println(this.nome + " ganhou " + xpGanha + " de XP!");
 
-        while(this.experienciaAtual >= this.experienciaAtual) {
+        while(this.experienciaAtual >= this.experienciaParaProximoNivel) {
             subirDeNivel();
         }
 
@@ -84,12 +89,13 @@ public abstract class Personagem {
         this.experienciaAtual -= this.experienciaParaProximoNivel;
 
         this.nivel++;
-        this.pontosVidaMax += 15;
-        this.pontosVida = this.pontosVidaMax;
-        this.ataque += 3;
-        this.defesa += 2;
+        this.experienciaParaProximoNivel = XP_BASE_POR_NIVEL * this.nivel;
 
-        this.experienciaParaProximoNivel = 100 * this.nivel;
+        this.pontosVidaMax += BONUS_HP_LEVEL_UP;
+        this.pontosVida = this.pontosVidaMax;
+        this.ataque += BONUS_ATAQUE_LEVEL_UP;
+        this.defesa += BONUS_DEFESA_LEVEL_UP;
+
 
         System.out.println("HP Max aumentado para: " + this.pontosVidaMax);
         System.out.println("Ataque aumentado para: " + this.ataque);
